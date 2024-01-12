@@ -349,10 +349,10 @@ let quadrupled_z_again : int = twice double z (* pass double to twice *)
    makes the first case of part1_tests "Problem 1" succeed. See the
    gradedtests.ml file.
 *)
-let pieces : int = -1
+let pieces : int = 8
 
 (* Implement a function cube that takes an int value and produces its cube. *)
-let cube : int -> int = fun _ -> failwith "cube unimplemented"
+let cube : int -> int = fun(x: int) -> x * x * x
 
 (* Problem 1-2 *)
 (*
@@ -365,7 +365,7 @@ let cube : int -> int = fun _ -> failwith "cube unimplemented"
    and computes the total value of the coins in cents:
 *)
 let cents_of : int -> int -> int -> int -> int =
-   fun _ -> failwith "cents_of unimplemented"
+   fun(q : int) (d : int) (n : int) (p : int) -> q * 25 + d * 10 + n * 5 + p
 
 (* Problem 1-3 *)
 (*
@@ -507,7 +507,7 @@ let pair_up (x : 'a) : 'a * 'a = (x, x)
    Complete the definition of third_of_three; be sure to give it
    the correct type signature (we will grade that part manually):
 *)
-let third_of_three _ = failwith "third_of_three unimplemented"
+let third_of_three (t : 'a * 'b * 'c) : 'c = match t with _, _, x -> x
 
 (*
   Problem 2-2
@@ -519,7 +519,7 @@ let third_of_three _ = failwith "third_of_three unimplemented"
 *)
 
 let compose_pair (p : ('b -> 'c) * ('a -> 'b)) : 'a -> 'c =
-  failwith "compose_pair unimplemented"
+  match p with fst_func, second_func -> fun (input) -> fst_func (second_func input)
 
 (******************************************************************************)
 (*                                                                            *)
@@ -672,7 +672,7 @@ let rec mylist_to_list (l : 'a mylist) : 'a list =
   the inverse of the mylist_to_list function given above.
 *)
 let rec list_to_mylist (l : 'a list) : 'a mylist =
-  failwith "list_to_mylist unimplemented"
+  match l with [] -> Nil | h :: tl -> Cons (h, list_to_mylist tl)
 
 (*
   Problem 3-2
@@ -688,7 +688,10 @@ let rec list_to_mylist (l : 'a list) : 'a mylist =
   append.  So (List.append [1;2] [3]) is the same as  ([1;2] @ [3]).
 *)
 let rec append (l1 : 'a list) (l2 : 'a list) : 'a list =
-  failwith "append unimplemented"
+  match l1, l2 with
+  | [] , _ -> l2 
+  | _ , [] -> l1
+  | h1 :: tl1 , h2 :: tl2 -> append  (l1 @ [h2]) (tl2)
 
 (*
   Problem 3-3
@@ -697,7 +700,9 @@ let rec append (l1 : 'a list) (l2 : 'a list) : 'a list =
   you might want to call append.  Do not use the library function.
 *)
 let rec rev (l : 'a list) : 'a list =
-  failwith "rev unimplemented"
+  match l with 
+  | [] -> []
+  | h :: tl -> append (rev tl) [h]
 
 (*
   Problem 3-4
@@ -709,7 +714,11 @@ let rec rev (l : 'a list) : 'a list =
   OCaml will compile a tail recursive function to a simple loop.
 *)
 let rev_t (l : 'a list) : 'a list =
-  failwith "rev_t unimplemented"
+  let rec rec_rev l accum = 
+  match l with
+    | [] -> accum
+    | h :: tl -> rec_rev tl (h :: accum)
+  in rec_rev l []
 
 (*
   Problem 3-5
@@ -725,7 +734,16 @@ let rev_t (l : 'a list) : 'a list =
   evaluates to true or false.
 *)
 let rec insert (x : 'a) (l : 'a list) : 'a list =
-  failwith "insert unimplemented"
+  match l with
+  | [] -> [x]
+  | h :: tl -> 
+    if x < h 
+      then x :: h :: tl 
+    else 
+      if x == h 
+        then l
+      else 
+        h :: (insert x tl)
 
 (*
   Problem 3-6
@@ -735,7 +753,17 @@ let rec insert (x : 'a) (l : 'a list) : 'a list =
   Hint: you might want to use the insert function that you just defined.
 *)
 let rec union (l1 : 'a list) (l2 : 'a list) : 'a list =
-   failwith "union unimplemented"
+  match l1, l2 with
+  | [] , [] -> []
+  | _ , [] -> l1
+  | [] , _ -> l2
+  | h1 :: tl1 , h2 :: tl2 -> 
+    if h1 < h2
+      then h1 :: (union tl1 l2)
+    else 
+      if h1 == h2
+        then h1 :: (union tl1 tl2)
+      else h2 :: (union l1 tl2)
 
 (******************************************************************************)
 (*                                                                            *)
@@ -822,7 +850,12 @@ let e3 : exp = Mult (Var "y", Mult (e2, Neg e2)) (* "y * ((x+1) * -(x+1))" *)
   Hint: you probably want to use the 'union' function you wrote for Problem 3-5.
 *)
 let rec vars_of (e : exp) : string list =
-  failwith "vars_of unimplemented"
+  match e with
+  | Var ipt_var -> [ipt_var]
+  | Const _ -> []
+  | Add (e1, e2) -> union (vars_of e1) (vars_of e2)
+  | Mult (e1, e2) -> union (vars_of e1) (vars_of e2)
+  | Neg num -> vars_of num
 
 (*
   How should we _interpret_ (i.e. give meaning to) an expression?
@@ -884,7 +917,13 @@ let ctxt2 : ctxt = [ ("x", 2L); ("y", 7L) ] (* maps "x" to 2L, "y" to 7L *)
   such value, it should raise the Not_found exception.
 *)
 let rec lookup (x : string) (c : ctxt) : int64 =
-  failwith "unimplemented"
+  match c with
+  | [] -> raise Not_found
+  | (name , con) :: rest -> 
+    if name = x then 
+      con
+    else 
+      lookup x rest
 
 (*
    Problem 4-3
@@ -910,7 +949,12 @@ let rec lookup (x : string) (c : ctxt) : int64 =
 *)
 
 let rec interpret (c : ctxt) (e : exp) : int64 =
-  failwith "unimplemented"
+  match e with
+  | Var ipt_var -> lookup ipt_var c
+  | Const con -> con
+  | Add (e1 , e2) -> Int64.add (interpret c e1) (interpret c e2)
+  | Mult (e1 , e2) -> Int64.mul (interpret c e1) (interpret c e2)
+  | Neg exp -> interpret c exp
 
 (*
   Problem 4-4
